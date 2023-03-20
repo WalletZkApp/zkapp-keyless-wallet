@@ -1,3 +1,6 @@
-import { Add } from './Add.js';
+import { Biometric, BiometricWitness } from './Biometric.js';
+import { Guardian, GuardianWitness } from './Guardian.js';
 
-export { Add };
+import { WalletZkApp } from './WalletZkApp.js';
+
+export { Biometric, BiometricWitness, Guardian, GuardianWitness, WalletZkApp };
