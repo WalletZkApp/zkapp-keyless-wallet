@@ -1,4 +1,4 @@
-import { Field, MerkleWitness, PublicKey, Poseidon, Struct } from 'snarkyjs';
+import { Field, MerkleWitness, Poseidon, Struct } from 'snarkyjs';
 
 export { Biometric, BiometricWitness };
 
@@ -9,6 +9,10 @@ class Biometric extends Struct({
 }) {
   static from(value: Field) {
     return new Biometric({ biometricHash: value });
+  }
+
+  static empty() {
+    return Biometric.from(Field(0));
   }
 
   hash(): Field {

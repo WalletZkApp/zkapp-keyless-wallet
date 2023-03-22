@@ -14,7 +14,6 @@ class Guardian extends Struct({
   }
 
   static empty() {
-    // this.witness = new GuardianWitness(dummyWitness);
     return Guardian.from(PublicKey.empty(), Field(0), Field(0));
   }
 
