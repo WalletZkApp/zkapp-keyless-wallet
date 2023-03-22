@@ -1,6 +1,5 @@
 import {
   Bool,
-  Circuit,
   Field,
   isReady,
   method,
@@ -10,25 +9,13 @@ import {
   Poseidon,
 } from 'snarkyjs';
 
-import {
-  // Biometric,
-  // BiometricWitness,
-  GuardianWitness,
-} from './index.js';
-
-export { WalletZkApp };
+export { WalletZkApp, MAIN_PASSWORD };
 
 await isReady;
 
-const MAIN_PASSWORD = Poseidon.hash([Field(1)]);
-
-let w = {
-  isLeft: false,
-  sibling: Field(0),
-};
-let dummyWitness = Array.from(Array(GuardianWitness.height - 1).keys()).map(
-  () => w
-);
+// generate a random salt
+const salt = Field.random();
+const MAIN_PASSWORD = Poseidon.hash([salt, Field(1)]);
 
 // we need the initiate tree root in order to tell the contract about our off-chain storage
 let initialCommitment: Field = Field(0);
@@ -89,21 +76,4 @@ class WalletZkApp extends SmartContract {
     this.committedGuardians.set(guardianRoot);
     this.guardianCounter.set(counter);
   }
-
-  // @method addGuardians(value: Field, biometric: Biometric, path: BiometricWitness, guardianRoot: Field, counter: Field) {
-  //   // should be guard by owner's biometrics
-  //   let commitmentBiometrics = this.commitedBiometrics.get();
-  //   this.commitedBiometrics.assertEquals(commitmentBiometrics);
-
-  //   facialScan.biometricHash.assertEquals(value);
-
-  //   // we check that the hashed biometric is within the committed Merkle Tree
-  //   path.calculateRoot(biometric.hash()).assertEquals(commitmentBiometrics);
-
-  //   let commitmentGuardians = this.committedGuardians.get();
-  //   this.committedGuardians.assertEquals(commitmentGuardians);
-
-  //   this.committedGuardians.set(guardianRoot);
-  //   this.guardianCounter.set(counter);
-  // }
 }

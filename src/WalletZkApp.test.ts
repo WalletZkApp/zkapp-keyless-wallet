@@ -7,13 +7,12 @@ import {
   Mina,
   PublicKey,
   PrivateKey,
-  Poseidon,
   shutdown,
 } from 'snarkyjs';
-import { Biometric, BiometricWitness, Guardian, WalletZkApp } from './index.js';
+import { MAIN_PASSWORD } from './WalletZkApp.js';
+import { Biometric, Guardian, WalletZkApp } from './index.js';
 
 let proofsEnabled = false;
-const MAIN_PASSWORD = Poseidon.hash([Field(1)]);
 
 const biometricTree = new MerkleTree(4);
 const guardianTree = new MerkleTree(8);
@@ -30,12 +29,12 @@ biometricTree.setLeaf(3n, voicePrint.hash());
 describe('WalletZkApp', () => {
   let deployerAccount: PublicKey,
     deployerKey: PrivateKey,
-    Guardian1Account: PublicKey,
-    Guardian1Key: PrivateKey,
-    Guardian2Account: PublicKey,
-    Guardian2Key: PrivateKey,
-    Guardian3Account: PublicKey,
-    Guardian3Key: PrivateKey,
+    guardian1Account: PublicKey,
+    guardian1Key: PrivateKey,
+    guardian2Account: PublicKey,
+    guardian2Key: PrivateKey,
+    guardian3Account: PublicKey,
+    guardian3Key: PrivateKey,
     zkAppAddress: PublicKey,
     zkAppPrivateKey: PrivateKey,
     zkApp: WalletZkApp;
@@ -50,11 +49,11 @@ describe('WalletZkApp', () => {
     Mina.setActiveInstance(Local);
     ({ privateKey: deployerKey, publicKey: deployerAccount } =
       Local.testAccounts[0]);
-    ({ privateKey: Guardian1Key, publicKey: Guardian1Account } =
+    ({ privateKey: guardian1Key, publicKey: guardian1Account } =
       Local.testAccounts[1]);
-    ({ privateKey: Guardian2Key, publicKey: Guardian2Account } =
+    ({ privateKey: guardian2Key, publicKey: guardian2Account } =
       Local.testAccounts[2]);
-    ({ privateKey: Guardian3Key, publicKey: Guardian3Account } =
+    ({ privateKey: guardian3Key, publicKey: guardian3Account } =
       Local.testAccounts[3]);
     zkAppPrivateKey = PrivateKey.random();
     zkAppAddress = zkAppPrivateKey.toPublicKey();
@@ -62,15 +61,15 @@ describe('WalletZkApp', () => {
 
     guardianTree.setLeaf(
       0n,
-      Guardian.from(Guardian1Account, Field(1), Field(1)).hash()
+      Guardian.from(guardian1Account, Field(1), Field(1)).hash()
     );
     guardianTree.setLeaf(
       1n,
-      Guardian.from(Guardian2Account, Field(2), Field(1)).hash()
+      Guardian.from(guardian2Account, Field(2), Field(1)).hash()
     );
     guardianTree.setLeaf(
       2n,
-      Guardian.from(Guardian3Account, Field(3), Field(1)).hash()
+      Guardian.from(guardian3Account, Field(3), Field(1)).hash()
     );
     guardianTree.setLeaf(
       3n,
@@ -96,7 +95,7 @@ describe('WalletZkApp', () => {
   }
 
   describe('#init', () => {
-    it('generates and deploys the `Add` smart contract', async () => {
+    it('generates and deploys the `WalletZkApp` smart contract', async () => {
       await localDeploy();
 
       const mainPassword = zkApp.mainPassword.get();
@@ -127,13 +126,9 @@ describe('WalletZkApp', () => {
   });
 
   describe('#addGuardians', () => {
-    it('correctly updates the guardianCounter state on the `Add` smart contract using password', async () => {
+    it('correctly updates the guardianCounter state on the `WalletZkApp` smart contract using password', async () => {
       await localDeploy();
-      // const facialScan = Biometric.from(Field(1));
-      // let w = biometricTree.getWitness(0n);
-      // let witness = new BiometricWitness(w);
 
-      // update transaction
       const txn = await Mina.transaction(deployerAccount, () => {
         zkApp.addGuadians(MAIN_PASSWORD, guardianTree.getRoot(), Field(3));
       });
@@ -143,22 +138,5 @@ describe('WalletZkApp', () => {
       const updatedGuardianCounter = zkApp.guardianCounter.get();
       expect(updatedGuardianCounter).toEqual(Field(3));
     });
-
-    // it('correctly updates the guardianCounter state on the `Add` smart contract using facialscan', async () => {
-    //   await localDeploy();
-    //   const facialScan = Biometric.from(Field(1));
-    //   let w = biometricTree.getWitness(0n);
-    //   let witness = new BiometricWitness(w);
-
-    //   // update transaction
-    //   const txn = await Mina.transaction(deployerAccount, () => {
-    //     zkApp.addGuadians(guardianTree.getRoot(), Field(3));
-    //   });
-    //   await txn.prove();
-    //   await txn.sign([deployerKey]).send();
-
-    //   const updatedGuardianCounter = zkApp.guardianCounter.get();
-    //   expect(updatedGuardianCounter).toEqual(Field(3));
-    // });
   });
 });

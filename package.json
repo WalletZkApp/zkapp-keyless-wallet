@@ -1,15 +1,39 @@
 {
-  "name": "01-hello-world",
-  "version": "0.1.0",
-  "description": "",
-  "author": "",
-  "license": "Apache-2.0",
+  "name": "zk-keyless-wallet",
+  "description": "Mina Protocol: Smart Contract Keyless wallet uses Social Recovery and SmartOTP's",
+  "version": "0.0.1",
+  "author": "WalletZkApp Community <maintainers@WalletZk.App>",
+  "license": "MIT",
+  "files": [
+    "/src/**/*.ts",
+    "/src/**/*.test.ts",
+    "/build/src/**/*.*"
+  ],
   "keywords": [
     "mina-zkapp",
     "mina-zk-app",
     "mina-dapp",
-    "zkapp"
+    "zkapp",
+    "smart-contract-wallet",
+    "keyless-wallet",
+    "snarkyjs",
+    "contracts",
+    "zk-wallet",
+    "social-recovery",
+    "smart-otps"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WalletZkApp/zkapp-keyless-wallet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WalletZkApp/zkapp-keyless-wallet/issues"
+  },
+  "projects": {
+    "name": "zkIgnite Cohort 1 (2023)",
+    "url": "https://github.com/orgs/WalletZkApp/projects"
+  },
+  "homepage": "https://WalletZk.app/contracts/",
   "type": "module",
   "main": "build/src/index.js",
   "types": "build/src/index.d.ts",

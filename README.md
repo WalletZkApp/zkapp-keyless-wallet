@@ -1,4 +1,4 @@
-# Mina zkApp: 01 Hello World
+# Mina zkApp: ZkApp Keyless Wallet
 
 This template uses TypeScript.
 
@@ -23,4 +23,4 @@ npm run coverage
 
 ## License
 
-[Apache-2.0](LICENSE)
+[MIT](LICENSE)
