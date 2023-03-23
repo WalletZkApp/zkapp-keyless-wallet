@@ -1,4 +1,5 @@
 import {
+  AccountUpdate,
   Bool,
   Field,
   isReady,
@@ -7,6 +8,12 @@ import {
   state,
   State,
   Poseidon,
+  PublicKey,
+  Permissions,
+  ProvablePure,
+  provablePure,
+  UInt64,
+  Mina,
   // PrivateKey,
 } from 'snarkyjs';
 import { Nullifier } from './Nullifier';
@@ -22,7 +29,19 @@ const MAIN_PASSWORD = Poseidon.hash([salt, Field(1)]);
 // we need the initiate tree root in order to tell the contract about our off-chain storage
 let initialCommitment: Field = Field(0);
 
-class WalletZkApp extends SmartContract {
+type IWallet = {
+  // mutations which need @method
+  deposit(amount: UInt64): Bool; // emits "Deposit" event
+  // events
+  events: {
+    Deposit: ProvablePure<{
+      to: PublicKey;
+      sender: PublicKey;
+      amount: UInt64;
+    }>;
+  };
+};
+class WalletZkApp extends SmartContract implements IWallet {
   @state(Field) mainPassword = State<Field>();
   @state(Field) commitedBiometrics = State<Field>();
   @state(Field) committedGuardians = State<Field>();
@@ -77,6 +96,32 @@ class WalletZkApp extends SmartContract {
 
     this.committedGuardians.set(guardianRoot);
     this.guardianCounter.set(counter);
+  }
+
+  events = {
+    Deposit: provablePure({
+      to: PublicKey,
+      sender: PublicKey,
+      amount: UInt64,
+    }),
+  };
+
+  @method deposit(amount: UInt64): Bool {
+    amount.assertGreaterThan(UInt64.from(0));
+
+    const senderBalance = Mina.getBalance(this.sender);
+    senderBalance.assertGreaterThanOrEqual(amount);
+
+    const payerUpdate = AccountUpdate.create(this.sender);
+    payerUpdate.requireSignature();
+    payerUpdate.send({ to: this.address, amount: amount });
+
+    this.emitEvent('Deposit', {
+      to: this.address,
+      sender: this.sender,
+      amount: amount,
+    });
+    return Bool(true);
   }
 
   @method generateNullifier(nullifier: Nullifier) {
