@@ -11,6 +11,9 @@ import {
 } from 'snarkyjs';
 import { MAIN_PASSWORD } from './WalletZkApp.js';
 import { Biometric, Guardian, WalletZkApp } from './index.js';
+import { Nullifier } from './Nullifier.js';
+// import { hexToUint8Array, messageToUint8Array } from './utils/encoding.js';
+// import { getPublicKey } from '@noble/secp256k1';
 
 let proofsEnabled = false;
 
@@ -137,6 +140,29 @@ describe('WalletZkApp', () => {
 
       const updatedGuardianCounter = zkApp.guardianCounter.get();
       expect(updatedGuardianCounter).toEqual(Field(3));
+    });
+  });
+
+  describe('#generateNullifier', () => {
+    it('correctly generates a nullifier', async () => {
+      await localDeploy();
+
+      let nullifier = Nullifier.from(
+        '519b423d715f8b581f4fa8ee59f4771a5b44c8130b4e3eacca54a56dda72b464',
+        'An example app message string',
+        '',
+        ''
+      );
+
+      const txn = await Mina.transaction(deployerAccount, () => {
+        zkApp.generateNullifier(nullifier);
+      });
+
+      console.log(nullifier.nullifierX);
+      console.log(nullifier.nullifierY);
+
+      await txn.prove();
+      await txn.sign([deployerKey]).send();
     });
   });
 });
