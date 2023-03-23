@@ -7,7 +7,9 @@ import {
   state,
   State,
   Poseidon,
+  // PrivateKey,
 } from 'snarkyjs';
+import { Nullifier } from './Nullifier';
 
 export { WalletZkApp, MAIN_PASSWORD };
 
@@ -75,5 +77,9 @@ class WalletZkApp extends SmartContract {
 
     this.committedGuardians.set(guardianRoot);
     this.guardianCounter.set(counter);
+  }
+
+  @method generateNullifier(nullifier: Nullifier) {
+    nullifier.generateNullifier();
   }
 }

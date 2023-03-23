@@ -70,5 +70,11 @@
   },
   "peerDependencies": {
     "snarkyjs": "0.9.*"
+  },
+  "dependencies": {
+    "@noble/secp256k1": "^1.7.1",
+    "amcl-js": "^3.1.0",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7"
   }
 }
