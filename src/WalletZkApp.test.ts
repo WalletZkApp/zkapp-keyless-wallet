@@ -8,6 +8,7 @@ import {
   PublicKey,
   PrivateKey,
   shutdown,
+  UInt64,
 } from 'snarkyjs';
 import { MAIN_PASSWORD } from './WalletZkApp.js';
 import { Biometric, Guardian, WalletZkApp } from './index.js';
@@ -38,6 +39,8 @@ describe('WalletZkApp', () => {
     guardian2Key: PrivateKey,
     guardian3Account: PublicKey,
     guardian3Key: PrivateKey,
+    senderAccount: PublicKey,
+    senderKey: PrivateKey,
     zkAppAddress: PublicKey,
     zkAppPrivateKey: PrivateKey,
     zkApp: WalletZkApp;
@@ -58,6 +61,8 @@ describe('WalletZkApp', () => {
       Local.testAccounts[2]);
     ({ privateKey: guardian3Key, publicKey: guardian3Account } =
       Local.testAccounts[3]);
+    ({ privateKey: senderKey, publicKey: senderAccount } =
+      Local.testAccounts[4]);
     zkAppPrivateKey = PrivateKey.random();
     zkAppAddress = zkAppPrivateKey.toPublicKey();
     zkApp = new WalletZkApp(zkAppAddress);
@@ -90,11 +95,14 @@ describe('WalletZkApp', () => {
   async function localDeploy() {
     const txn = await Mina.transaction(deployerAccount, () => {
       AccountUpdate.fundNewAccount(deployerAccount);
+      //feePayerUpdate.send({ to: senderAccount, amount: 100 });
       zkApp.deploy();
     });
     await txn.prove();
     // this tx needs .sign(), because `deploy()` adds an account update that requires signature authorization
     await txn.sign([deployerKey, zkAppPrivateKey]).send();
+
+    console.log('deploy and fund user accounts');
   }
 
   describe('#init', () => {
@@ -140,6 +148,21 @@ describe('WalletZkApp', () => {
 
       const updatedGuardianCounter = zkApp.guardianCounter.get();
       expect(updatedGuardianCounter).toEqual(Field(3));
+    });
+  });
+
+  describe('#deposit', () => {
+    it('correctly updates the balance state on the `WalletZkApp` smart contract', async () => {
+      await localDeploy();
+      const amount: UInt64 = UInt64.from(1e9).div(1e9);
+      const txn = await Mina.transaction(senderAccount, () => {
+        zkApp.deposit(amount);
+      });
+      await txn.prove();
+      await txn.sign([senderKey]).send();
+
+      const updatedBalance = Mina.getBalance(zkApp.address);
+      expect(updatedBalance).toEqual(amount);
     });
   });
 
