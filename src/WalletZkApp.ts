@@ -36,8 +36,8 @@ type IWallet = {
   // events
   events: {
     Deposit: ProvablePure<{
+      from: PublicKey;
       to: PublicKey;
-      sender: PublicKey;
       amount: UInt64;
     }>;
     Withdraw: ProvablePure<{
@@ -54,16 +54,24 @@ class WalletZkApp extends SmartContract implements IWallet {
   @state(Field) guardianCounter = State<Field>();
   @state(Bool) useBiometrics = State<Bool>();
 
+  @state(Bool) paused = State<Bool>();
+
   events = {
     Deposit: provablePure({
+      from: PublicKey,
       to: PublicKey,
-      sender: PublicKey,
       amount: UInt64,
     }),
     Withdraw: provablePure({
       from: PublicKey,
       to: PublicKey,
       amount: UInt64,
+    }),
+    Paused: provablePure({
+      account: PublicKey,
+    }),
+    Unpaused: provablePure({
+      account: PublicKey,
     }),
   };
 
@@ -122,6 +130,11 @@ class WalletZkApp extends SmartContract implements IWallet {
   }
 
   @method deposit(amount: UInt64): Bool {
+    let paused = this.paused.get();
+    this.paused.assertEquals(paused);
+    // should not be paused
+    paused.assertEquals(Bool(false));
+
     amount.assertGreaterThan(UInt64.from(0));
 
     const senderBalance = Mina.getBalance(this.sender);
@@ -132,14 +145,19 @@ class WalletZkApp extends SmartContract implements IWallet {
     payerUpdate.send({ to: this.address, amount: amount });
 
     this.emitEvent('Deposit', {
+      from: this.sender,
       to: this.address,
-      sender: this.sender,
       amount: amount,
     });
     return Bool(true);
   }
 
   @method withdraw(to: PublicKey, amount: UInt64): Bool {
+    let paused = this.paused.get();
+    this.paused.assertEquals(paused);
+    // should not be paused
+    paused.assertEquals(Bool(false));
+
     // TODO: check that the sender is the owner of the wallet or
     // or knows the main password
     // or proof of biometrics
@@ -156,6 +174,33 @@ class WalletZkApp extends SmartContract implements IWallet {
       amount: amount,
     });
     return Bool(true);
+  }
+
+  @method pause() {
+    // TODO: check that the sender is the owner of the wallet or
+    // or knows the main password
+    // or proof of biometrics
+    let paused = this.paused.get();
+    this.paused.assertEquals(paused);
+
+    paused.assertEquals(Bool(false));
+
+    this.paused.set(Bool(true));
+    this.emitEvent('Paused', {
+      account: this.sender,
+    });
+  }
+
+  @method unpause() {
+    let paused = this.paused.get();
+    this.paused.assertEquals(paused);
+
+    paused.assertEquals(Bool(true));
+
+    this.paused.set(Bool(false));
+    this.emitEvent('Unpaused', {
+      account: this.sender,
+    });
   }
 
   @method generateNullifier(nullifier: Nullifier) {
