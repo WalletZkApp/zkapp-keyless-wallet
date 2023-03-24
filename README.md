@@ -1,26 +1,47 @@
-# Mina zkApp: ZkApp Keyless Wallet
+# Mina Protocol: Smart Contract Keyless Wallet
 
-This template uses TypeScript.
+This project implements a keyless smart contract wallet using Mina Protocol. The wallet leverages Social Recovery and SmartOTP's to enable users to restore access to their accounts without revealing any personal information of the users and guardians.
 
-## How to build
+## Building the Project
 
-```sh
+To build the project, follow these steps:
+
+1. Clone the repository to your local machine.
+2. Open a terminal and navigate to the project directory.
+   3.Run the command
+
+```
 npm run build
 ```
 
-## How to run tests
+## Running Tests
 
-```sh
+To run the tests for the project, follow these steps:
+
+1. Open a terminal and navigate to the project directory.
+2. Run the command
+
+```
 npm run test
-npm run testw # watch mode
 ```
 
-## How to run coverage
+To run the tests in watch mode, use the command
 
-```sh
+```
+npm run testw.
+```
+
+## Code Coverage
+
+To generate a code coverage report for the project, follow these steps:
+
+1. Open a terminal and navigate to the project directory.
+2. Run the command
+
+```
 npm run coverage
 ```
 
-## License
+# License
 
-[MIT](LICENSE)
+This project is licensed under the MIT license. See the [LICENSE](LICENSE) file for more details.

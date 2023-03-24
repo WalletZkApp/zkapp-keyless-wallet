@@ -162,7 +162,31 @@ describe('WalletZkApp', () => {
       await txn.sign([senderKey]).send();
 
       const updatedBalance = Mina.getBalance(zkApp.address);
+      console.log('updatedBalance', updatedBalance.toString());
       expect(updatedBalance).toEqual(amount);
+    });
+  });
+
+  describe('#withdraw', () => {
+    const amount: UInt64 = UInt64.from(1e9).div(1e9);
+    beforeEach(async () => {
+      await localDeploy();
+      const txn = await Mina.transaction(senderAccount, () => {
+        zkApp.deposit(amount);
+      });
+      await txn.prove();
+      await txn.sign([senderKey]).send();
+    });
+    it('should able to withdraw from smart contract wallet', async () => {
+      const txn = await Mina.transaction(deployerAccount, () => {
+        zkApp.withdraw(deployerAccount, amount);
+      });
+      await txn.prove();
+      await txn.sign([deployerKey]).send();
+
+      const updatedBalance = Mina.getBalance(zkApp.address);
+      console.log('updatedBalance', updatedBalance.toString());
+      expect(updatedBalance.toString()).toEqual('0');
     });
   });
 
