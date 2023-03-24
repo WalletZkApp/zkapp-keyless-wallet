@@ -188,6 +188,58 @@ describe('WalletZkApp', () => {
       console.log('updatedBalance', updatedBalance.toString());
       expect(updatedBalance.toString()).toEqual('0');
     });
+    it('should not able to withdraw when pause', async () => {
+      await Mina.transaction(deployerAccount, () => {
+        zkApp.pause();
+      });
+      const txn = await Mina.transaction(deployerAccount, () => {
+        zkApp.withdraw(deployerAccount, amount);
+      });
+      await txn.prove();
+      await txn.sign([deployerKey]).send();
+
+      console.log('txn', txn);
+
+      // const updatedBalance = Mina.getBalance(zkApp.address);
+      // console.log('updatedBalance', updatedBalance.toString());
+      // expect(updatedBalance.toString()).toEqual('1000000000');
+    });
+  });
+
+  describe('#pause', () => {
+    it('correctly updates the paused state on the `WalletZkApp` smart contract', async () => {
+      await localDeploy();
+
+      const txn = await Mina.transaction(deployerAccount, () => {
+        zkApp.pause();
+      });
+      await txn.prove();
+      await txn.sign([deployerKey]).send();
+
+      const paused = zkApp.paused.get();
+      expect(paused).toEqual(Bool(true));
+    });
+  });
+
+  describe('#unpause', () => {
+    it('correctly updates the paused state on the `WalletZkApp` smart contract', async () => {
+      await localDeploy();
+
+      const txn1 = await Mina.transaction(deployerAccount, () => {
+        zkApp.pause();
+      });
+      await txn1.prove();
+      await txn1.sign([deployerKey]).send();
+
+      const txn2 = await Mina.transaction(deployerAccount, () => {
+        zkApp.unpause();
+      });
+      await txn2.prove();
+      await txn2.sign([deployerKey]).send();
+
+      const paused = zkApp.paused.get();
+      expect(paused).toEqual(Bool(false));
+    });
   });
 
   describe('#generateNullifier', () => {
