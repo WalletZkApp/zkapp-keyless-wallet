@@ -32,11 +32,17 @@ let initialCommitment: Field = Field(0);
 type IWallet = {
   // mutations which need @method
   deposit(amount: UInt64): Bool; // emits "Deposit" event
+  withdraw(to: PublicKey, amount: UInt64): Bool; // emits "Withdraw" event
   // events
   events: {
     Deposit: ProvablePure<{
       to: PublicKey;
       sender: PublicKey;
+      amount: UInt64;
+    }>;
+    Withdraw: ProvablePure<{
+      from: PublicKey;
+      to: PublicKey;
       amount: UInt64;
     }>;
   };
@@ -48,12 +54,29 @@ class WalletZkApp extends SmartContract implements IWallet {
   @state(Field) guardianCounter = State<Field>();
   @state(Bool) useBiometrics = State<Bool>();
 
+  events = {
+    Deposit: provablePure({
+      to: PublicKey,
+      sender: PublicKey,
+      amount: UInt64,
+    }),
+    Withdraw: provablePure({
+      from: PublicKey,
+      to: PublicKey,
+      amount: UInt64,
+    }),
+  };
+
   init() {
     super.init();
     this.mainPassword.set(MAIN_PASSWORD);
     this.commitedBiometrics.set(initialCommitment);
     this.committedGuardians.set(initialCommitment);
     this.guardianCounter.set(Field(0));
+    this.account.permissions.set({
+      ...Permissions.default(),
+      send: Permissions.proofOrSignature(),
+    });
   }
 
   @method addBiometrics(
@@ -98,14 +121,6 @@ class WalletZkApp extends SmartContract implements IWallet {
     this.guardianCounter.set(counter);
   }
 
-  events = {
-    Deposit: provablePure({
-      to: PublicKey,
-      sender: PublicKey,
-      amount: UInt64,
-    }),
-  };
-
   @method deposit(amount: UInt64): Bool {
     amount.assertGreaterThan(UInt64.from(0));
 
@@ -119,6 +134,25 @@ class WalletZkApp extends SmartContract implements IWallet {
     this.emitEvent('Deposit', {
       to: this.address,
       sender: this.sender,
+      amount: amount,
+    });
+    return Bool(true);
+  }
+
+  @method withdraw(to: PublicKey, amount: UInt64): Bool {
+    // TODO: check that the sender is the owner of the wallet or
+    // or knows the main password
+    // or proof of biometrics
+    amount.assertGreaterThan(UInt64.from(0));
+
+    const walletBalance = Mina.getBalance(this.address);
+    walletBalance.assertGreaterThanOrEqual(amount);
+
+    this.send({ to: to, amount });
+
+    this.emitEvent('Withdraw', {
+      from: this.address,
+      to: to,
       amount: amount,
     });
     return Bool(true);
